@@ -508,8 +508,18 @@ wObject* ArrayList_Object(wArrayList* arrayList)
 
 BOOL ArrayList_ForEach(wArrayList* arrayList, ArrayList_ForEachFkt fkt, ...)
 {
-	size_t index, count;
+	BOOL rc;
 	va_list ap;
+	va_start(ap, fkt);
+	rc = ArrayList_ForEachAP(arrayList, fkt, ap);
+	va_end(ap);
+
+	return rc;
+}
+
+BOOL ArrayList_ForEachAP(wArrayList* arrayList, ArrayList_ForEachFkt fkt, va_list ap)
+{
+	size_t index, count;
 	BOOL rc = FALSE;
 
 	WINPR_ASSERT(arrayList);
@@ -517,14 +527,12 @@ BOOL ArrayList_ForEach(wArrayList* arrayList, ArrayList_ForEachFkt fkt, ...)
 
 	ArrayList_Lock_Conditional(arrayList);
 	count = ArrayList_Count(arrayList);
-	va_start(ap, fkt);
 	for (index = 0; index < count; index++)
 	{
 		void* obj = ArrayList_GetItem(arrayList, index);
 		if (!fkt(obj, index, ap))
 			goto fail;
 	}
-	va_end(ap);
 	rc = TRUE;
 fail:
 	ArrayList_Unlock_Conditional(arrayList);
